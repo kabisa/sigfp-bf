@@ -1,0 +1,42 @@
+name:                bf
+synopsis:            BF interpreter, in Haskell
+description:         BF interpreter, in Haskell
+version:             0.0.1
+license:             MIT
+author:              Luc Tielen
+maintainer:          luc.tielen@gmail.com
+copyright:           2020 Luc Tielen
+category:            Interpreters
+extra-source-files:
+  - README.md
+  - LICENSE
+
+dependencies:
+  - base >= 4.12 && < 5
+  - megaparsec
+
+default-extensions:
+  - OverloadedStrings
+
+ghc-options:
+  - -Wall
+  - -Weverything
+  - -Wno-safe
+  - -Wno-unsafe
+  - -Wno-implicit-prelude
+  - -Wno-missed-specializations
+  - -Wno-all-missed-specializations
+  - -Wno-missing-import-lists
+  - -Wno-type-defaults
+  - -Wno-missing-local-signatures
+  - -Wno-monomorphism-restriction
+  - -Wno-missing-deriving-strategies
+  - -optP-Wno-nonportable-include-path
+  - -fhide-source-paths
+  - -fno-show-valid-hole-fits
+  - -fno-sort-valid-hole-fits
+
+executables:
+  bf-exe:
+    source-dirs:      src
+    main:             Main.hs
