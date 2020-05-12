@@ -16,7 +16,7 @@ dependencies:
   - megaparsec
 
 default-extensions:
-  - OverloadedStrings
+  - LambdaCase
 
 ghc-options:
   - -Wall
