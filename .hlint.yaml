@@ -50,13 +50,6 @@
 # Ignore some builtin hints
 # - ignore: {name: Use let}
 # - ignore: {name: Use const, within: SpecialModule} # Only within certain modules
-- ignore:
-    name: Reduce duplication
-    within:
-      - Test.Language.Souffle.CompiledSpec
-      - Test.Language.Souffle.InterpretedSpec
-      - Language.Souffle.Interpreted
-
 
 # Define some custom infix operators
 # - fixity: infixr 3 ~^#^~
