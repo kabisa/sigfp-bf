@@ -6,7 +6,7 @@ module Main ( main ) where
 import qualified Text.Megaparsec as P
 import Control.Applicative
 import Control.Monad.State
-import Data.Array
+import Data.Array.IO
 import Data.Word
 import Data.Char
 import Data.Void
@@ -63,19 +63,21 @@ commentParser :: Parser ()
 commentParser = P.skipMany $ P.noneOf "+-><.,[]"
 
 type Index = Int
+type Memory = IOUArray Index Word8
 
 data InterpreterState
   = InterpreterState
-  { memory :: Array Index Word8
+  { memory :: Memory
   , pointer :: Index
   }
 
 type Interpreter a = StateT InterpreterState IO a
 
 runInterpreter :: Interpreter a -> IO a
-runInterpreter action = evalStateT action beginState
-  where
-    beginState = InterpreterState (listArray (0, 30000) [0, 0..]) 0
+runInterpreter action = do
+  ram <- newArray (0, 30000) 0
+  let beginState = InterpreterState ram 0
+  evalStateT action beginState
 
 interpret :: [Instruction] -> Interpreter ()
 interpret = traverse_ interpretSingle
@@ -87,35 +89,39 @@ interpretSingle = \case
   DecrementPointer -> modify $ \s -> s { pointer = pointer s - 1 }
   Increment -> do
     InterpreterState ram ptr <- get
-    let value = ram ! ptr
-        updatedRam = ram // [(ptr, value + 1)]
-    modify $ \s -> s { memory = updatedRam }
+    liftIO $ do
+      currentValue <- readArray ram ptr
+      writeArray ram ptr (currentValue + 1)
   Decrement -> do
     InterpreterState ram ptr <- get
-    let value = ram ! ptr
-        updatedRam = ram // [(ptr, value - 1)]
-    modify $ \s -> s { memory = updatedRam }
+    liftIO $ do
+      currentValue <- readArray ram ptr
+      writeArray ram ptr (currentValue - 1)
   WriteOutput -> do
     InterpreterState ram ptr <- get
-    let value = ram ! ptr
-        char = chr $ fromIntegral value
-    liftIO . putChar $ char
+    liftIO $ do
+      value <- readArray ram ptr
+      let char = chr $ fromIntegral value
+      putChar char
   ReadInput -> do
-    char <- liftIO getChar
-    let byte = fromIntegral $ ord char
     InterpreterState ram ptr <- get
-    let updatedRam = ram // [(ptr, byte)]
-        updatedState = InterpreterState updatedRam ptr
-    put updatedState
+    liftIO $ do
+      char <- getChar
+      let byte = fromIntegral $ ord char
+      writeArray ram ptr byte
   Loop instructions -> do
     InterpreterState ram ptr <- get
-    let value = ram ! ptr
-    if value == 0
-      then pure ()
-      else do
-        interpret instructions
-        interpretSingle $ Loop instructions
+    value <- liftIO $ readArray ram ptr
+    when (value /= 0) $ do
+      interpret instructions
+      interpretSingle $ Loop instructions
 
+
+-- TODO
+-- 1. improve performance
+--   - list of mutations per memory address
+-- 2. error handling
+-- 3. general refactorings
 
 main :: IO ()
 main = do
